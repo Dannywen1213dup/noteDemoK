@@ -112,34 +112,39 @@ function parseFilesToPosts(files) {
                 
                 // 尝试找日期 (支持 "01" 或 "01-Monday" 格式)
                 const dayPart = pathParts[yearIndex + 2];
-                if (dayPart && /^\d{1,2}/.test(dayPart)) {
-                     // 提取数字部分和星期几
-                     const dayMatch = dayPart.match(/^(\d{1,2})(?:-(.+))?$/);
-                     if (dayMatch) {
-                         day = dayMatch[1].padStart(2, '0');
-                         weekday = dayMatch[2]; // 提取星期几（如果有）
-                         dateStr = `${year}-${month}-${day}`;
-                         
-                         // 星期几的中英文映射
-                         const weekdayMap = {
-                             'Monday': '星期一',
-                             'Tuesday': '星期二',
-                             'Wednesday': '星期三',
-                             'Thursday': '星期四',
-                             'Friday': '星期五',
-                             'Saturday': '星期六',
-                             'Sunday': '星期日'
-                         };
-                         
-                         // 格式化显示日期
-                         const weekdayChinese = weekday && weekdayMap[weekday] ? weekdayMap[weekday] : '';
-                         if (weekdayChinese) {
-                             displayDate = `${year}年${parseInt(month)}月${parseInt(day)}日 ${weekdayChinese}`;
-                         } else {
-                             displayDate = `${year}年${parseInt(month)}月${parseInt(day)}日`;
-                         }
-                     }
+                if (dayPart) {
+                    // 提取数字部分和星期几 (支持 "07-Friday" 格式)
+                    const dayMatch = dayPart.match(/^(\d{1,2})(?:-(.+))?$/);
+                    if (dayMatch) {
+                        day = dayMatch[1].padStart(2, '0');
+                        weekday = dayMatch[2]; // 提取星期几（如果有）
+                        dateStr = `${year}-${month}-${day}`;
+                        
+                        // 星期几的中英文映射
+                        const weekdayMap = {
+                            'Monday': '星期一',
+                            'Tuesday': '星期二',
+                            'Wednesday': '星期三',
+                            'Thursday': '星期四',
+                            'Friday': '星期五',
+                            'Saturday': '星期六',
+                            'Sunday': '星期日'
+                        };
+                        
+                        // 格式化显示日期
+                        const weekdayChinese = weekday && weekdayMap[weekday] ? weekdayMap[weekday] : '';
+                        if (weekdayChinese) {
+                            displayDate = `${year}年${parseInt(month)}月${parseInt(day)}日 ${weekdayChinese}`;
+                        } else {
+                            displayDate = `${year}年${parseInt(month)}月${parseInt(day)}日`;
+                        }
+                    } else {
+                        // 如果 dayPart 存在但格式不匹配，至少显示年月
+                        dateStr = `${year}-${month}`;
+                        displayDate = `${year}年${parseInt(month)}月`;
+                    }
                 } else {
+                    // 没有日期部分，只显示年月
                     dateStr = `${year}-${month}`;
                     displayDate = `${year}年${parseInt(month)}月`;
                 }
