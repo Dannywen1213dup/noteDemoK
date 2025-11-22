@@ -3,10 +3,10 @@
 // ==========================================
 const CONFIG = {
     // 你的 GitHub 用户名
-    repoOwner: "你的GitHub用户名", 
+    repoOwner: "Dannywen1213dup",
     
-    // 你的仓库名称
-    repoName: "你的仓库名",
+    // 你的仓库名称https://github.com//.git
+    repoName: "noteDemoK",
     
     // 分支名称 (通常是 main 或 master)
     branch: "main",
