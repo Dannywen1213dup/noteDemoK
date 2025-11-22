@@ -95,8 +95,11 @@ function parseFilesToPosts(files) {
         
         // 尝试从路径中提取日期
         let dateStr = "未知日期";
+        let displayDate = "未知日期";
         let year = "其他";
         let month = "其他";
+        let day = null;
+        let weekday = null;
         
         // 简单的日期探测逻辑 (查找路径里的 4位数字作为年份)
         const yearPart = pathParts.find(p => /^\d{4}$/.test(p));
@@ -110,11 +113,35 @@ function parseFilesToPosts(files) {
                 // 尝试找日期 (支持 "01" 或 "01-Monday" 格式)
                 const dayPart = pathParts[yearIndex + 2];
                 if (dayPart && /^\d{1,2}/.test(dayPart)) {
-                     // 提取数字部分，忽略后面的星期几
-                     const day = dayPart.match(/^(\d{1,2})/)[1].padStart(2, '0');
-                     dateStr = `${year}-${month}-${day}`;
+                     // 提取数字部分和星期几
+                     const dayMatch = dayPart.match(/^(\d{1,2})(?:-(.+))?$/);
+                     if (dayMatch) {
+                         day = dayMatch[1].padStart(2, '0');
+                         weekday = dayMatch[2]; // 提取星期几（如果有）
+                         dateStr = `${year}-${month}-${day}`;
+                         
+                         // 星期几的中英文映射
+                         const weekdayMap = {
+                             'Monday': '星期一',
+                             'Tuesday': '星期二',
+                             'Wednesday': '星期三',
+                             'Thursday': '星期四',
+                             'Friday': '星期五',
+                             'Saturday': '星期六',
+                             'Sunday': '星期日'
+                         };
+                         
+                         // 格式化显示日期
+                         const weekdayChinese = weekday && weekdayMap[weekday] ? weekdayMap[weekday] : '';
+                         if (weekdayChinese) {
+                             displayDate = `${year}年${parseInt(month)}月${parseInt(day)}日 ${weekdayChinese}`;
+                         } else {
+                             displayDate = `${year}年${parseInt(month)}月${parseInt(day)}日`;
+                         }
+                     }
                 } else {
                     dateStr = `${year}-${month}`;
+                    displayDate = `${year}年${parseInt(month)}月`;
                 }
             }
         }
@@ -127,9 +154,12 @@ function parseFilesToPosts(files) {
 
         return {
             title: title,
-            date: dateStr,
+            date: dateStr,          // 用于排序的日期格式: 2025-11-22
+            displayDate: displayDate, // 用于显示的日期格式: 2025年11月22日 星期六
             year: year,
             month: month,
+            day: day,
+            weekday: weekday,
             path: file.path, // 这里是相对路径，GitHub Pages 可以直接访问
             url: `https://raw.githubusercontent.com/${CONFIG.repoOwner}/${CONFIG.repoName}/${CONFIG.branch}/${file.path}`, // 用于读取内容
             fileType: fileType // 新增：记录文件类型
@@ -249,7 +279,7 @@ function renderTimeline(reset = false) {
         
         card.innerHTML = `
             <div class="post-meta">
-                <i class="far fa-clock"></i> ${post.date}
+                <i class="far fa-clock"></i> ${post.displayDate}
             </div>
             <h3 class="post-title">${post.title}</h3>
             <div class="post-preview">点击阅读全文...</div>
