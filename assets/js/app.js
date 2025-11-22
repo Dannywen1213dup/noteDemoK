@@ -77,10 +77,10 @@ async function fetchFileList() {
 
     const data = await response.json();
     
-    // 筛选出 posts 目录下的 markdown 文件
+    // 筛选出 posts 目录下的 markdown 和 txt 文件
     return data.tree.filter(item => 
         item.path.startsWith(CONFIG.basePath) && 
-        item.path.endsWith('.md') &&
+        (item.path.endsWith('.md') || item.path.endsWith('.txt')) &&
         item.type === 'blob' // blob 代表是文件
     );
 }
@@ -119,8 +119,11 @@ function parseFilesToPosts(files) {
             }
         }
 
-        // 标题默认为文件名去掉 .md
-        const title = fileName.replace('.md', '');
+        // 标题默认为文件名去掉 .md 或 .txt
+        const title = fileName.replace(/\.(md|txt)$/, '');
+        
+        // 判断文件类型
+        const fileType = fileName.endsWith('.md') ? 'markdown' : 'text';
 
         return {
             title: title,
@@ -128,7 +131,8 @@ function parseFilesToPosts(files) {
             year: year,
             month: month,
             path: file.path, // 这里是相对路径，GitHub Pages 可以直接访问
-            url: `https://raw.githubusercontent.com/${CONFIG.repoOwner}/${CONFIG.repoName}/${CONFIG.branch}/${file.path}` // 用于读取内容
+            url: `https://raw.githubusercontent.com/${CONFIG.repoOwner}/${CONFIG.repoName}/${CONFIG.branch}/${file.path}`, // 用于读取内容
+            fileType: fileType // 新增：记录文件类型
         };
     });
 
@@ -272,16 +276,27 @@ async function openPost(post) {
         // 使用 Raw 内容 URL 获取内容
         const response = await fetch(post.url);
         if (!response.ok) throw new Error('Failed to load post content');
-        let markdown = await response.text();
+        let content = await response.text();
         
-        // 简单的修正：如果 markdown 第一行是标题，就去掉它（因为外面已经显示了）
-        // 这是一个可选的优化
-        
-        body.innerHTML = marked.parse(markdown);
+        // 根据文件类型渲染内容
+        if (post.fileType === 'markdown') {
+            // Markdown 文件：使用 marked 解析
+            body.innerHTML = marked.parse(content);
+        } else {
+            // TXT 文件：保留纯文本格式（保留换行和空格）
+            body.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word; font-family: inherit; line-height: 1.8;">${escapeHtml(content)}</pre>`;
+        }
     } catch (error) {
         console.error(error);
         body.innerHTML = '<p>加载内容失败。请检查文件路径或网络。</p>';
     }
+}
+
+// 工具函数：转义 HTML 特殊字符，防止 XSS 攻击
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function closeModal() {
