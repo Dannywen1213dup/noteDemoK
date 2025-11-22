@@ -107,9 +107,11 @@ function parseFilesToPosts(files) {
             if (pathParts[yearIndex + 1] && /^\d{1,2}$/.test(pathParts[yearIndex + 1])) {
                 month = pathParts[yearIndex + 1].padStart(2, '0');
                 
-                // 尝试找日期
-                if (pathParts[yearIndex + 2] && /^\d{1,2}$/.test(pathParts[yearIndex + 2])) {
-                     const day = pathParts[yearIndex + 2].padStart(2, '0');
+                // 尝试找日期 (支持 "01" 或 "01-Monday" 格式)
+                const dayPart = pathParts[yearIndex + 2];
+                if (dayPart && /^\d{1,2}/.test(dayPart)) {
+                     // 提取数字部分，忽略后面的星期几
+                     const day = dayPart.match(/^(\d{1,2})/)[1].padStart(2, '0');
                      dateStr = `${year}-${month}-${day}`;
                 } else {
                     dateStr = `${year}-${month}`;
